@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+# coding=utf-8
+"""
+Executable file for mdtree https://github.com/menduo/mdtree
+"""
+
+import sys, os
+from os.path import join
+
+uppath = lambda _path, n: os.sep.join(_path.split(os.sep)[:-n])
+_p_parent_dir = uppath(os.path.abspath(__file__), 2)
+_path_of_mdtree_dir = join(uppath(os.path.abspath(__file__), 2), "mdtree")
+if os.path.exists(join(_p_parent_dir, "mdtree", "mdtree.py")):
+    sys.path.insert(0, _p_parent_dir)
+    try:
+        from mdtree.__main__ import main
+    finally:
+        del sys.path[0]
+else:
+    from mdtree.__main__ import main
+
+if __name__ == '__main__':
+    pass
+    main()
