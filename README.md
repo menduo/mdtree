@@ -5,7 +5,7 @@ Convert markdown to html with TOC(table of contents) tree. [https://github.com/m
 
 # Screenshot
 
-![https://raw.githubusercontent.com/menduo/mdtree/master/assets/screenshots/mdtree-screenshot.png](https://github.com/menduo/mdtree)
+![https://github.com/menduo/mdtree](https://raw.githubusercontent.com/menduo/mdtree/master/assets/screenshots/mdtree-screenshot.png)
 
 # Install
 
