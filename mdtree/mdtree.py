@@ -43,24 +43,23 @@ class MdTree(object):
             "markdown.extensions.tables",
             "markdown.extensions.toc",
             "markdown.extensions.fenced_code",
-            # "markdown.extensions.codehilite",
+            "markdown.extensions.codehilite",
         ]
 
         self._js_base = ""
         self._css_base = ""
         self._html = ""
 
-        self._js_more = _clean_list(kwargs.get("js", "").split(","))
-        self._css_more = _clean_list(kwargs.get("css", "").split(","))
+        self._js_more = _clean_list(kwargs.get("js", []))
+        self._css_more = _clean_list(kwargs.get("css", []))
         self._title = kwargs.get("title", "")
         self._zt_is_auto_number = kwargs.get("z_is_auto_number", "false")
         self._z_opts = kwargs.get("z_opts", "")
 
         exts = kwargs.get("exts", [])
         exts = _clean_list(exts)
-
-        self._md_meta = None
         self._md_extensions = _clean_list(list(set(self._md_extensions + exts)))
+        self._md_extensions = self._remove_exts(self._md_extensions, exts)
 
     def prepare_static_files(self):
         """
@@ -87,15 +86,14 @@ class MdTree(object):
 
         return self._css_base, self._js_base
 
-    def append_static_files(self):
+    def parse_static_files(self, meta):
         """
         Get more static files
+        :param dict meta: markdown meta
+        :return tuple: css, js
         """
-        css_more = self._css_more + _clean_list(self._md_meta.get("css", []))
-        js_more = self._js_more + _clean_list(self._md_meta.get("js", []))
-
-        css_more = list(set(css_more))
-        js_more = list(set(js_more))
+        css_more = list(set(self._css_more + _clean_list(meta.get("css", []))))
+        js_more = list(set(self._js_more + _clean_list(meta.get("js", []))))
 
         css = ["""<link href="%s" rel="stylesheet" type="text/css" />""" % c for c in
                css_more]
@@ -103,7 +101,7 @@ class MdTree(object):
         js = ["""<script type="text/javascript" src="%s"></script>""" % j for j in
               js_more]
 
-        return "\n".join(css), "\n".join(js)
+        return css, js
 
     def parse_title(self, mdstring):
         """
@@ -124,6 +122,17 @@ class MdTree(object):
 
         return "MdTree"
 
+    def _remove_exts(self, l1, l2):
+        """
+        remove extensions from l1 which were defined in l2
+        :param list l1: source list
+        :param list l2: define list
+        :return list:
+        """
+        _removed_ext_list = [i for i in l2 if i.startswith("-")]
+        _removed_ext_list.extend([i.lstrip("-") for i in _removed_ext_list])
+        return [i for i in l1 if i not in _removed_ext_list]
+
     def parse_md_config(self, source):
         """
         parse exts config from markdown file and update the markdown object
@@ -133,11 +142,15 @@ class MdTree(object):
         """
         md = markdown.Markdown(extensions=["markdown.extensions.meta"])
         md.convert(source)
-        self._md_meta = md.Meta
+        md_meta = md.Meta
 
-        exts = self._md_meta.get("exts", [])
+        # remove exts
+        exts = md_meta.get("exts", [])
         self._md_extensions = _clean_list(list(set(self._md_extensions + exts)))
-        self._md = markdown.Markdown(extensions=self._md_extensions)
+        self._md_extensions = self._remove_exts(self._md_extensions, exts)
+
+        # recreate an instance of Markdown object
+        return markdown.Markdown(extensions=self._md_extensions)
 
     def convert(self, source):
         """
@@ -148,23 +161,37 @@ class MdTree(object):
         if not isinstance(source, unicode_type):
             source = source.decode("utf-8")
 
-        self.parse_md_config(source)
+        # parse meta、exts config
+        md = self.parse_md_config(source)
+        md_html = md.convert(source)
+        md_meta = md.Meta
 
-        md_html = self._md.convert(source)
-
+        # prepare the basic static files
         css_base, js_base = self.prepare_static_files()
 
-        title = self._title or self._md_meta.get("title", [""])[0]
+        # get title from init、meta、markdown source
+        title = self._title or md_meta.get("title", [""])[0]
         title = title or self.parse_title(source)
 
+        # try to get more static files from markdown source
+        css_more_list, js_more_list = self.parse_static_files(md_meta)
+        css_more_str = "\n".join(css_more_list)
+        js_more_str = "\n".join(js_more_list)
+
+        html = self.gen_html(title, md_html, css_base, js_base, css_more_str, js_more_str)
+        return html
+
+    def gen_html(self, title, content, css_base, js_base, css_more="", js_more=""):
+        """
+        Generate html
+        :return str: html
+        """
         with open(os.path.join(_d_static_path, "html/template.html")) as f:
             _tpl = f.read()
             _tpl = _tpl.decode("utf-8")
 
-        css_more, js_more = self.append_static_files()
-
-        html = _tpl.format(title=title, content=md_html, css_base=css_base,
-                           js_base=js_base, css_more=css_more, js_more=js_more)
+        html = _tpl.format(title=title, content=content, css_base=css_base, js_base=js_base,
+                           css_more=css_more, js_more=js_more)
 
         self._html = html
         return html
@@ -192,7 +219,7 @@ class MdTree(object):
 # Exported Funcs
 def convert_file(**kwargs):
     """
-    :param kwargs:
+    :param dict kwargs:
     :return:
     """
     source = kwargs["source"]
