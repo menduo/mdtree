@@ -3,22 +3,57 @@
 """
 Executable file for mdtree https://github.com/menduo/mdtree
 """
-
+import argparse
 import sys, os
 from os.path import join
 
 uppath = lambda _path, n: os.sep.join(_path.split(os.sep)[:-n])
 _p_parent_dir = uppath(os.path.abspath(__file__), 2)
 _path_of_mdtree_dir = join(uppath(os.path.abspath(__file__), 2), "mdtree")
+
+
+def parse_args():
+    """
+    Define and parse `optparse` options for command-line usage.
+    """
+    usage = """mdtree [options] [source file]"""
+    desc = "convert markdown to html with TOC(Table of contents) tree"
+
+    parser = argparse.ArgumentParser(usage=usage, description=desc)
+    parser.add_argument("source", default="", help="souce file, markdown")
+    parser.add_argument("-t", "--target", dest="target",
+                        help="Write output to TARGET. Defaults to STDOUT.")
+    parser.add_argument("--css", dest="css", default="", help="more css, http/s links")
+    parser.add_argument("--js", dest="js", default="", help="more js, http/s links")
+
+    return parser.parse_args()
+
+
+def main(c_func):  # pragma: no cover
+    """Run Markdown from the command line."""
+
+    args = parse_args()
+
+    if not args.source:
+        return
+
+    params = {
+        "source": args.source,
+        "target": args.target,
+        "js": args.js,
+        "css": args.css
+    }
+    c_func(**params)
+
+
 if os.path.exists(join(_p_parent_dir, "mdtree", "mdtree.py")):
     sys.path.insert(0, _p_parent_dir)
     try:
-        from mdtree.__main__ import main
+        from mdtree.mdtree import convert_file
     finally:
         del sys.path[0]
 else:
-    from mdtree.__main__ import main
+    from mdtree.mdtree import convert_file
 
 if __name__ == '__main__':
-    pass
-    main()
+    main(convert_file)

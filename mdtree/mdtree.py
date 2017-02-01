@@ -158,7 +158,7 @@ class MdTree(object):
         :param str source: contents of markdown file
         :return:
         """
-        if not isinstance(source, unicode_type):
+        if not isinstance(source, unicode_type) and PY2:
             source = source.decode("utf-8")
 
         # parse meta、exts config
@@ -188,7 +188,8 @@ class MdTree(object):
         """
         with open(os.path.join(_d_static_path, "html/template.html")) as f:
             _tpl = f.read()
-            _tpl = _tpl.decode("utf-8")
+            if PY2:
+                _tpl = _tpl.decode("utf-8")
 
         html = _tpl.format(title=title, content=content, css_base=css_base, js_base=js_base,
                            css_more=css_more, js_more=js_more)
@@ -233,5 +234,5 @@ def convert_file(**kwargs):
         if PY2:
             sys.stdout.write(html)
         else:
-            sys.stdout.buffer.write(html)
+            sys.stdout.buffer.write(html.encode("utf-8"))
     return html
