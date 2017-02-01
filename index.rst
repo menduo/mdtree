@@ -17,7 +17,7 @@ Install
 
 .. code:: bash
 
-    pip install mdtree
+    pip install -U mdtree
 
 Usage
 =====
