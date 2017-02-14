@@ -25,6 +25,7 @@ def parse_args():
                         help="Write output to TARGET. Defaults to STDOUT.")
     parser.add_argument("--css", dest="css", default="", help="more css, http/s links")
     parser.add_argument("--js", dest="js", default="", help="more js, http/s links")
+    parser.add_argument("--title", dest="title", default="", help="title")
 
     return parser.parse_args()
 
@@ -40,8 +41,7 @@ def main(c_func):  # pragma: no cover
     params = {
         "source": args.source,
         "target": args.target,
-        "js": args.js,
-        "css": args.css
+        "title": args.title,
     }
     c_func(**params)
 
