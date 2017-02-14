@@ -110,5 +110,3 @@ Credits
 
 -  `Markdown <https://github.com/waylan/Python-Markdown>`__ - A Python
    implementation of John Gruber’s Markdown
--  `i5ting\_ztree\_toc <https://github.com/i5ting/i5ting_ztree_toc>`__ -
-   a jQuery plugin for preview markdown table of content jQuery

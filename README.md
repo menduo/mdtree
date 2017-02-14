@@ -92,4 +92,3 @@ The name of the extensioins should be the same as [https://pythonhosted.org/Mark
 
 # Credits
 - [Markdown](https://github.com/waylan/Python-Markdown) - A Python implementation of John Gruber’s Markdown
-- [i5ting_ztree_toc](https://github.com/i5ting/i5ting_ztree_toc) - a jQuery plugin for preview markdown table of content jQuery
