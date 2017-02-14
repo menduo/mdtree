@@ -4,6 +4,7 @@
 mdtree, convert markdown to html with TOC(table of contents) tree. https://github.com/menduo/mdtree
 """
 import sys, os, re
+import datetime
 import markdown
 from .mdutils import PY3, _clean_list, to_unicode, utf8
 
@@ -138,7 +139,7 @@ class MdTree(object):
         # recreate an instance of Markdown object
         return markdown.Markdown(extensions=self._md_extensions)
 
-    def gen_html(self, title, content, css_base, js_base, toc, css_more="", js_more=""):
+    def gen_html(self, params):
         """
         Generate html
         :return str: html
@@ -147,14 +148,23 @@ class MdTree(object):
             _tpl = f.read()
             _tpl = to_unicode(_tpl)
 
-        title = to_unicode(title)
-        css_more = to_unicode(css_more)
-        js_more = to_unicode(js_more)
-        css_base = to_unicode(css_base)
-        js_base = to_unicode(js_base)
+        title = to_unicode(params["title"])
+        css_more = to_unicode(params["css_more"])
+        js_more = to_unicode(params["js_more"])
+        css_base = to_unicode(params["css_base"])
+        js_base = to_unicode(params["js_base"])
+        content = to_unicode(params["content"])
+        toc = to_unicode(params["toc"])
+
+        generated_at = """<div id="generated-at">
+            Generated at: %s
+        </div>
+                """ % datetime.datetime.now().replace(microsecond=0).__str__()
+        generated_at = to_unicode(generated_at)
 
         html = _tpl.format(title=title, content=content, css_base=css_base, js_base=js_base,
-                           toc_content=toc, css_more=css_more, js_more=js_more)
+                           toc_content=toc, css_more=css_more, js_more=js_more,
+                           generated_at=generated_at)
 
         self._html = utf8(html)
         return html
@@ -185,7 +195,17 @@ class MdTree(object):
         css_more_str = "\n".join(css_more_list)
         js_more_str = "\n".join(js_more_list)
 
-        html = self.gen_html(title, md_html, css_base, js_base, toc, css_more_str, js_more_str)
+        params = {
+            "title": title,
+            "content": md_html,
+            "css_base": css_base,
+            "js_base": js_base,
+            "css_more": css_more_str,
+            "js_more": js_more_str,
+            "toc": toc,
+        }
+
+        html = self.gen_html(params)
         return html
 
     def convert_file(self, spath):
