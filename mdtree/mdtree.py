@@ -5,27 +5,16 @@ mdtree, convert markdown to html with TOC(table of contents) tree. https://githu
 """
 import sys, os, re
 import markdown
+from .mdutils import PY3, _clean_list, to_unicode, utf8
 
 _d_static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
-PY2 = sys.version_info.major == 2
-
-if PY2:
-    unicode_type = unicode
-else:
-    unicode_type = str
-
-
-def _clean_list(alist):
-    """
-    clean items
-    :param list alist: a list
-    :return:
-    """
-    return [str(i).strip() for i in alist if str(i).strip()]
-
-
 __all__ = ["MdTree", "convert_file"]
+
+_meta_data_fence_pattern = re.compile(r'^---[\ \t]*\n', re.MULTILINE)
+_meta_data_pattern = re.compile(
+    r'^(?:---[\ \t]*\n)?(.*:\s+>\n\s+[\S\s]+?)(?=\n\w+\s*:\s*\w+\n|\Z)|([\S\w]+\s*:(?! >)[ \t]*.*\n?)(?:---[\ \t]*\n)?',
+    re.MULTILINE)
 
 
 class MdTree(object):
@@ -53,8 +42,6 @@ class MdTree(object):
         self._js_more = _clean_list(kwargs.get("js", []))
         self._css_more = _clean_list(kwargs.get("css", []))
         self._title = kwargs.get("title", "")
-        self._zt_is_auto_number = kwargs.get("z_is_auto_number", "false")
-        self._z_opts = kwargs.get("z_opts", "")
 
         exts = kwargs.get("exts", [])
         exts = _clean_list(exts)
@@ -71,19 +58,6 @@ class MdTree(object):
             self._css_base = f.read()
         with open(__js_file) as f:
             self._js_base = f.read()
-
-        _z_opt = "is_auto_number: %s" % self._zt_is_auto_number
-        if self._z_opts:
-            _z_opt += "," + self._z_opts
-
-        self._js_base += """
-            jQuery(document).ready(function () {
-                    jQuery('#tree').ztree_toc({
-                        %s
-                    });
-            });
-            """ % _z_opt
-
         return self._css_base, self._js_base
 
     def parse_static_files(self, meta):
@@ -107,10 +81,22 @@ class MdTree(object):
         """
         get title
         """
-        mdstring = mdstring.lstrip("\n").lstrip(" ")
-        head_pattern1 = re.compile(r'^ *(#{1}) *([^\n]+?) *#* *(?:\n+|$)')
-        m = re.match(head_pattern1, mdstring)
 
+        if mdstring.startswith("---"):
+            fence_splits = re.split(_meta_data_fence_pattern, mdstring, maxsplit=2)
+            metadata_content = fence_splits[1]
+            match = re.findall(_meta_data_pattern, metadata_content)
+            if match:
+                mdstring = fence_splits[2]
+
+        mdstring = mdstring.lstrip("\n").lstrip(" ")
+        head_pattern1 = re.compile(r'^ *(#{1}) *([^\n\n]+?) *#* *(?:\n+|$)')
+        m = re.match(head_pattern1, mdstring)
+        if m:
+            return m.group(2)
+
+        head_pattern12 = re.compile(r'^ *(#{2}) *([^\n]+?) *#* *(?:\n+|$)')
+        m = re.match(head_pattern12, mdstring)
         if m:
             return m.group(2)
 
@@ -152,19 +138,40 @@ class MdTree(object):
         # recreate an instance of Markdown object
         return markdown.Markdown(extensions=self._md_extensions)
 
+    def gen_html(self, title, content, css_base, js_base, toc, css_more="", js_more=""):
+        """
+        Generate html
+        :return str: html
+        """
+        with open(os.path.join(_d_static_path, "html/template.html")) as f:
+            _tpl = f.read()
+            _tpl = to_unicode(_tpl)
+
+        title = to_unicode(title)
+        css_more = to_unicode(css_more)
+        js_more = to_unicode(js_more)
+        css_base = to_unicode(css_base)
+        js_base = to_unicode(js_base)
+
+        html = _tpl.format(title=title, content=content, css_base=css_base, js_base=js_base,
+                           toc_content=toc, css_more=css_more, js_more=js_more)
+
+        self._html = utf8(html)
+        return html
+
     def convert(self, source):
         """
         convert markdown to html with TOC
         :param str source: contents of markdown file
         :return:
         """
-        if not isinstance(source, unicode_type) and PY2:
-            source = source.decode("utf-8")
+        source = to_unicode(source)
 
         # parse meta、exts config
         md = self.parse_md_config(source)
         md_html = md.convert(source)
         md_meta = md.Meta
+        toc = md.toc
 
         # prepare the basic static files
         css_base, js_base = self.prepare_static_files()
@@ -178,23 +185,7 @@ class MdTree(object):
         css_more_str = "\n".join(css_more_list)
         js_more_str = "\n".join(js_more_list)
 
-        html = self.gen_html(title, md_html, css_base, js_base, css_more_str, js_more_str)
-        return html
-
-    def gen_html(self, title, content, css_base, js_base, css_more="", js_more=""):
-        """
-        Generate html
-        :return str: html
-        """
-        with open(os.path.join(_d_static_path, "html/template.html")) as f:
-            _tpl = f.read()
-            if PY2:
-                _tpl = _tpl.decode("utf-8")
-
-        html = _tpl.format(title=title, content=content, css_base=css_base, js_base=js_base,
-                           css_more=css_more, js_more=js_more)
-
-        self._html = html
+        html = self.gen_html(title, md_html, css_base, js_base, toc, css_more_str, js_more_str)
         return html
 
     def convert_file(self, spath):
@@ -228,11 +219,12 @@ def convert_file(**kwargs):
 
     mdtree = MdTree(**kwargs)
     html = mdtree.convert_file(source)
+    html = utf8(html)
     if target:
         mdtree.save_file(target)
     else:
-        if PY2:
-            sys.stdout.write(html)
+        if PY3:
+            sys.stdout.buffer.write(html)
         else:
-            sys.stdout.buffer.write(html.encode("utf-8"))
+            sys.stdout.write(html)
     return html

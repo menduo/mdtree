@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="powered-by" content="https://github.com/menduo/mdtree">
     <title>{title}</title>
     <style>
         {css_base}
@@ -10,14 +11,20 @@
     {css_more}
 </head>
 <body>
-    <div id="tree-wrapper">
-        <ul id="tree" class="ztree"></ul>
-    </div>
-    <div id="readme" style="width:85%;margin-left:10%;">
-        <div class="markdown-content">
-            {content}
+<div id="layout">
+        <div id="sidebar">
+            <h1>Table of Contents</h1>
+            <div id="custom-toc-container">
+                {toc_content}
+            </div>
         </div>
+        <div id="content-container">
+            <div class="markdown-body markdown-content">
+                {content}
+            </div>
 
+
+        </div>
         <div id="footer">
             Powered by
             <a href="https://github.com/menduo/mdtree" target="_blank"
@@ -25,9 +32,7 @@
                 https://github.com/menduo/mdtree
             </a>
         </div>
-    </div>
-
-
+</div>
 </body>
 
 <script>
