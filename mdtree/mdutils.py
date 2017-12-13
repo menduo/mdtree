@@ -1,15 +1,46 @@
 #!/usr/bin/env python
 # coding=utf-8
 import sys
+import re
+import os
+import base64
+from markdown.inlinepatterns import ImagePattern, IMAGE_LINK_RE
+
+RE_REMOTEIMG = re.compile('^(http|https):.+')
+
+_meta_data_fence_pattern = re.compile(r'^---[\ \t]*\n', re.MULTILINE)
+_meta_data_pattern = re.compile(
+    r'^(?:---[\ \t]*\n)?(.*:\s+>\n\s+[\S\s]+?)(?=\n\w+\s*:\s*\w+\n|\Z)|([\S\w]+\s*:(?! >)[ \t]*.*\n?)(?:---[\ \t]*\n)?',
+    re.MULTILINE)
 
 
-def _clean_list(alist):
+def unique_list(alist):
+    return list(set(alist))
+
+
+def clean_list(alist):
     """
     clean items
     :param list alist: a list
     :return:
     """
-    return [str(i).strip() for i in alist if str(i).strip()]
+    alist = list(map(lambda x: str(x).strip(), alist))
+    alist = list(filter(lambda x: x != "", alist))
+    return unique_list(alist)
+
+
+def get_first(alist):
+    rlist = clean_list(alist) or [None]
+    return rlist[0]
+
+
+def to_bool(value):
+    if isinstance(value, (list, tuple)):
+        value = value[0]
+    value = str(value)
+    if value.strip() in [0, None, "None", "False", "", "0"]:
+        return False
+    return True
 
 
 # Code from tornado.escape
@@ -108,3 +139,77 @@ def recursive_unicode(obj):
         return to_unicode(obj)
     else:
         return obj
+
+
+def convert_img_to_b64(src, base_dir=None):
+    if RE_REMOTEIMG.match(src):
+        return src
+
+    src = os.path.expanduser(src)
+    if base_dir:
+        base_dir = os.path.expanduser(base_dir)
+        src = os.path.join(base_dir, src)
+
+    if not os.path.exists(src):
+        raise ValueError("file does not exists on: %s" % src)
+
+    ext = "png"
+    if os.path.splitext(src)[1] in [".jpg", "jpeg"]:
+        ext = "jpeg"
+
+    with open(src, "rb") as f:
+        data = f.read()
+
+    img_data = base64.b64encode(data)
+    res = "data:image/%s;base64,%s" % (ext, img_data)
+    return res
+
+
+def handle_image_element(node, base):
+    src = node.attrib.get('src')
+    if src and not RE_REMOTEIMG.match(src):
+        node.set("src", convert_img_to_b64(src, base))
+    return node
+
+
+class ImageCheckPattern(ImagePattern):
+    def __init__(self, base, md_inst=None, pattern=IMAGE_LINK_RE):
+        super(ImageCheckPattern, self).__init__(pattern, md_inst)
+        self.__base_dir = base
+
+    def handleMatch(self, m):
+        node = ImagePattern.handleMatch(self, m)
+        node = handle_image_element(node, self.__base_dir)
+        return node
+
+
+def parse_title(mdstring):
+    """
+    get title
+    """
+
+    if mdstring.startswith("---"):
+        fence_splits = re.split(_meta_data_fence_pattern, mdstring, maxsplit=2)
+        metadata_content = fence_splits[1]
+        match = re.findall(_meta_data_pattern, metadata_content)
+        if match:
+            mdstring = fence_splits[2]
+
+    mdstring = mdstring.lstrip("\n").lstrip(" ")
+    head_pattern1 = re.compile(r'^ *(#{1}) *([^\n\n]+?) *#* *(?:\n+|$)')
+    m = re.match(head_pattern1, mdstring)
+    if m:
+        return m.group(2)
+
+    head_pattern12 = re.compile(r'^ *(#{2}) *([^\n]+?) *#* *(?:\n+|$)')
+    m = re.match(head_pattern12, mdstring)
+    if m:
+        return m.group(2)
+
+    head_pattern2 = re.compile(r'^([^\n]+)\n *(=|-)+ *(?:\n+|$)')
+    m = re.match(head_pattern2, mdstring)
+
+    if m:
+        return m.group(1)
+
+    return "MdTree"

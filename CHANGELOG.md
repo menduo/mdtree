@@ -1,6 +1,13 @@
+# v0.5-2017-12-13
+
+## Added
+
+- add `to64` option to enable convert local image url to base64.
 
 # v0.1-2017-01-28
-# Added
+
+## Added
+
 - Support disable Markdown Extension from `meta` section;
 - Add more doc
 - Add screenshot

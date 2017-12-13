@@ -7,9 +7,9 @@ import argparse
 import sys, os
 from os.path import join
 
-uppath = lambda _path, n: os.sep.join(_path.split(os.sep)[:-n])
-_p_parent_dir = uppath(os.path.abspath(__file__), 2)
-_path_of_mdtree_dir = join(uppath(os.path.abspath(__file__), 2), "mdtree")
+up_path = lambda _path, n: os.sep.join(_path.split(os.sep)[:-n])
+_p_parent_dir = up_path(os.path.abspath(__file__), 2)
+_path_of_mdtree_dir = join(up_path(os.path.abspath(__file__), 2), "mdtree")
 
 
 def parse_args():
@@ -26,6 +26,8 @@ def parse_args():
     parser.add_argument("--css", dest="css", default="", help="more css, http/s links")
     parser.add_argument("--js", dest="js", default="", help="more js, http/s links")
     parser.add_argument("--title", dest="title", default="", help="title")
+    parser.add_argument("--to64", dest="to64", default=False, action="store_true",
+                        help="convert local image to base64?")
 
     return parser.parse_args()
 
@@ -43,17 +45,20 @@ def main(c_func):  # pragma: no cover
         "target": args.target,
         "title": args.title,
     }
+    if args.to64:
+        params.update({"to64": args.to64})
+
     c_func(**params)
 
 
-if os.path.exists(join(_p_parent_dir, "mdtree", "mdtree.py")):
+if os.path.exists(_path_of_mdtree_dir):
     sys.path.insert(0, _p_parent_dir)
     try:
-        from mdtree.mdtree import convert_file
+        from mdtree import convert_from_file
     finally:
         del sys.path[0]
 else:
-    from mdtree.mdtree import convert_file
+    from mdtree import convert_from_file
 
 if __name__ == '__main__':
-    main(convert_file)
+    main(convert_from_file)

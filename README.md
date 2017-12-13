@@ -1,4 +1,4 @@
-# MdTree #
+# MdTree
 
 
 Convert markdown to html with TOC(table of contents) tree. [https://github.com/menduo/mdtree](https://github.com/menduo/mdtree)
@@ -34,6 +34,10 @@ html = mt.convert_file("/tmp/gitit_bigger_readme.md")
 ```bash
 mdtree /path/of/markdown/file.md > /tmp/mdtree.html
 ```
+
+# Options
+
+- `to64` : convert local image URL to base64. add `--to64` to shell argument or add `to64` option to meta area.
 
 # Meta
 
