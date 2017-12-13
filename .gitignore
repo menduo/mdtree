@@ -17,7 +17,8 @@ _amds
 conf/settings_local.py
 conf/settings_local*.py
 .python-version
-_locals
+_locals/
 *.egg-info/
 dist/
+_ignored/
 
