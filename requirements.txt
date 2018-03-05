@@ -1,2 +1,2 @@
-markdown
+markdown==2.6.11
 pygments
