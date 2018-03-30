@@ -408,5 +408,5 @@ sup {
 }
 #tree-wrapper{ width:40%;display:block;padding-bottom:5px; }
 #tree {width: 330px;  overflow: auto;  position: fixed;  top: 20px;  z-index: 2147483647;  border: 0px none;  left: 0px;  bottom: 0px; padding-bottom: 10px;}
-#footer{margin: 10px auto 10px;color: #eee;}
-#footer a{color: #eee;}
+#footer{margin: 10px auto 10px;color: #f2f2f2;}
+#footer a{color: #f2f2f2;}
