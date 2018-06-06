@@ -21,4 +21,5 @@ _locals/
 *.egg-info/
 dist/
 _ignored/
-
+_ignored_menduo/
+build/
