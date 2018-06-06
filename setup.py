@@ -10,7 +10,7 @@ packages = ["mdtree"]
 setup(
     name="mdtree",
     version=__version__,
-    keywords=("markdown", "toc", "tree", "html"),
+    keywords=["markdown", "toc", "tree", "html"],
     description="Convert markdown to html with TOC(table of contents)",
     long_description="see more at:\n%s\n" % repo_url,
     license="MIT",
