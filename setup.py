@@ -46,5 +46,5 @@ setup(
         "Topic :: Text Processing :: Filters",
         "Topic :: Text Processing :: Markup :: HTML",
     ],
-    install_requires=["markdown>=2.6.8", "pygments"],
+    install_requires=["markdown>=2.6.8,<3.0", "pygments"],
 )
