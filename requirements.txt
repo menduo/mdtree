@@ -1,2 +1,2 @@
-markdown
+markdown==3.0.1
 pygments
