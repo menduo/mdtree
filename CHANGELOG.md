@@ -1,3 +1,10 @@
+# v0.7-2019-01-07
+
+## fix
+
+- Fix Markdown desired version, thanks @fabiomontefuscolo 
+
+
 # v0.5-2017-12-13
 
 ## Added

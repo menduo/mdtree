@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 from setuptools import setup
-__version__ = "0.6"
+__version__ = "0.7"
 __desc__ = "Convert markdown to html with TOC(table of contents) https://github.com/menduo/mdtree"
 
 repo_url = "https://github.com/menduo/mdtree"
@@ -39,6 +39,8 @@ setup(
         "Programming Language :: Python :: 3.3",
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Internet :: WWW/HTTP :: Site Management",
